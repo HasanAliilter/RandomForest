@@ -1,5 +1,5 @@
 from src.preprocess import preprocess_data_in_chunks, load_multiple_files_in_chunks
-from src.train_model import train_random_forest_in_chunks
+from src.train_model import grid_search_random_forest
 from src.evaluate_model import evaluate_model
 from src.visualize import plot_feature_importance
 from sklearn.model_selection import KFold
@@ -7,36 +7,28 @@ import numpy as np
 import pandas as pd
 
 data_directory = "Data"
-data = load_multiple_files_in_chunks(data_directory)  # Veriyi parçalara ayırarak yükleme
-data = preprocess_data_in_chunks(data)  # Veriyi parçalara ayırarak işleme
+chunk_size = 100000  # Daha küçük chunk boyutu
 
-print(data.head())
-print("Veri setindeki sütunlar:", data.columns.tolist())
+# Veriyi parçalara ayırarak yükleme ve işleme
+data_chunks = load_multiple_files_in_chunks(data_directory, chunk_size)
 
-if 'Label' not in data.columns:
-    raise KeyError("Veri setinde 'Label' sütunu bulunamadı. Lütfen veri setini kontrol edin.")
+processed_X_chunks = []
+processed_y_chunks = []
 
-X = data.drop(columns=['Label'])
-y = data['Label']
+for chunk in data_chunks:
+    result = preprocess_data_in_chunks(chunk)
+    if result is not None:
+        X_resampled, y_resampled = result  # Hem X hem de y'yi alıyoruz
+        processed_X_chunks.append(X_resampled)
+        processed_y_chunks.append(y_resampled)
 
-def clean_data(X, y):
-    """NaN ve sonsuz değerleri temizleme."""
-    print("NaN değer sayısı (öncesi):", X.isnull().sum().sum())
-    print("Sonsuz değer sayısı (öncesi):", np.isinf(X).sum().sum())
+# Verileri birleştirme işlemi
+if processed_X_chunks:  # Liste boş değilse, verileri birleştir
+    X = pd.concat(processed_X_chunks, ignore_index=True)
+    y = pd.concat(processed_y_chunks, ignore_index=True)
 
-    X.fillna(X.mean(), inplace=True)
-    X.replace([np.inf, -np.inf], np.nan, inplace=True)
-    X.dropna(inplace=True)
-
-    y = y[X.index]
-    print("y NaN değer sayısı (sonrası):", y.isna().sum())
-
-    print("NaN değer sayısı (sonrası):", X.isnull().sum().sum())
-    print("Sonsuz değer sayısı (sonrası):", np.isinf(X).sum().sum())
-
-    return X, y
-
-X, y = clean_data(X, y)
+print(X.head())
+print("Veri setindeki sütunlar:", X.columns.tolist())
 
 # K-Fold Cross Validation
 kf = KFold(n_splits=5, shuffle=True, random_state=42)
@@ -49,11 +41,11 @@ for train_index, test_index in kf.split(X):
     X_train, X_test = X.iloc[train_index], X.iloc[test_index]
     y_train, y_test = y.iloc[train_index], y.iloc[test_index]
 
-    # Model eğitimi
-    model = train_random_forest_in_chunks(X_train, y_train)
+    # Model eğitimi (GridSearchCV ile hiperparametre optimizasyonu)
+    model, X_test_pca = grid_search_random_forest(X_train, y_train, X_test)  # Burada GridSearch kullanıyoruz
 
     # Model değerlendirmesi
-    accuracy, report = evaluate_model(model, X_test, y_test)
+    accuracy, report = evaluate_model(model, X_test_pca, y_test)
     accuracies.append(accuracy)
     classification_reports.append(report)
 
