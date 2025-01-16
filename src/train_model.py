@@ -1,13 +1,21 @@
 import numpy as np
 from sklearn.calibration import LabelEncoder
+from xgboost import XGBClassifier 
 from sklearn.ensemble import RandomForestClassifier
 import pandas as pd
 from imblearn.over_sampling import SMOTE
 from sklearn.decomposition import PCA
 from sklearn.model_selection import GridSearchCV
 from sklearn.impute import SimpleImputer
+import time
 
-def grid_search_random_forest(X_train, y_train, X_test):
+def grid_search_xgboost(X_train, y_train, X_test):
+    print("BURDAAAAAAAAAAAA")
+    #print("GPU Kullanılabilirliği:", rabit.get_processor_info())
+    start_gpu = time.time()
+  
+    label_encoder= LabelEncoder()
+
     print("X_train NaN değer sayısı:", np.isnan(X_train).sum().sum())
     print("X_train sonsuz değer sayısı:", np.isinf(X_train).sum().sum())
     
@@ -40,24 +48,27 @@ def grid_search_random_forest(X_train, y_train, X_test):
 
     # GridSearchCV için parametre grid'i (daha dar bir grid kullanıyoruz)
     param_grid = {
-        'n_estimators': [50, 100],  # Ağaç sayısını biraz daha daraltıyoruz
-        'max_depth': [10, 20],  # Ağaç derinliğini daraltıyoruz
-        'min_samples_split': [2, 5],  # İç düğümde minimum örnek sayısı
-        'min_samples_leaf': [1, 2],  # Yaprak düğümde minimum örnek sayısı
-        'class_weight': ['balanced']  # Sınıf dengesi
-    }
+    'n_estimators': [50, 100],  # Ağaç sayısı
+    'max_depth': [10, 20],  # Ağaç derinliği
+    'learning_rate': [0.01, 0.1],  # Öğrenme oranı
+    'gamma': [0, 1],  # Ağaç bölünmelerini kontrol eder
+    'subsample': [0.8, 1.0],  # Örnekleme oranı
+}
 
-    # Random Forest modelini başlatma
-    rf_model = RandomForestClassifier(random_state=42)
+    # XGBoost modelini başlatma
+    
+    xgb_model = XGBClassifier(random_state=42, eval_metric='logloss',tree_method='hist',device="cuda")
 
     # GridSearchCV başlatma
-    grid_search = GridSearchCV(estimator=rf_model, param_grid=param_grid, cv=3, scoring='accuracy', n_jobs=-1)
+    grid_search = GridSearchCV(estimator=xgb_model, param_grid=param_grid, cv=3, scoring='accuracy', n_jobs=-1)
 
     # GridSearchCV ile model eğitimi
-    grid_search.fit(X_train_resampled, y_train_resampled)
-
+    grid_search.fit(X_train_resampled, y_train_resampled, ) #verbose = 'true'
+    end_gpu = time.time()
+    print(f"GPU Eğitim Süresi: {end_gpu - start_gpu:.2f} saniye")
     # En iyi model parametreleri
     print("En iyi parametreler:", grid_search.best_params_)
+    print(label_encoder.classes_)
 
     # En iyi model döndürülüyor
     return grid_search.best_estimator_, X_test_pca
