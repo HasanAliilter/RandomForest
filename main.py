@@ -1,5 +1,5 @@
 from src.preprocess import preprocess_data_in_chunks, load_multiple_files_in_chunks
-from src.train_model import grid_search_random_forest
+from src.train_model import grid_search_xgboost
 from src.evaluate_model import evaluate_model
 from src.visualize import plot_feature_importance
 from sklearn.model_selection import KFold
@@ -41,10 +41,8 @@ for train_index, test_index in kf.split(X):
     X_train, X_test = X.iloc[train_index], X.iloc[test_index]
     y_train, y_test = y.iloc[train_index], y.iloc[test_index]
 
-    # Model eğitimi (GridSearchCV ile hiperparametre optimizasyonu)
-    model, X_test_pca = grid_search_random_forest(X_train, y_train, X_test)  # Burada GridSearch kullanıyoruz
+    model, X_test_pca = grid_search_xgboost(X_train, y_train, X_test)  
 
-    # Model değerlendirmesi
     accuracy, report = evaluate_model(model, X_test_pca, y_test)
     accuracies.append(accuracy)
     classification_reports.append(report)
@@ -53,7 +51,6 @@ for train_index, test_index in kf.split(X):
     print(f"Fold {fold} Classification Report:\n", report)
     fold += 1
 
-# Ortalama doğruluk ve rapor
 mean_accuracy = np.mean(accuracies)
 print("\nOrtalama Accuracy:", mean_accuracy)
 
