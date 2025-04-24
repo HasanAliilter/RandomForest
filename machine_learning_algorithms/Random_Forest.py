@@ -99,26 +99,21 @@ class RandomForest:
     def fit(self, X, y):
         num_samples, num_features = X.shape
 
-        # Varsayılan olarak özelliklerin karekökü kadar özellik seç
         if not self.max_features:
             self.max_features = int(np.sqrt(num_features))
 
         self.trees = []
         for _ in range(self.n_estimators):
-            # Bootstrap örnekleme
             sample_indices = np.random.choice(num_samples, num_samples, replace=True)
             X_sample = X[sample_indices]
             y_sample = y[sample_indices]
 
-            # Özellik alt kümesi seçimi
             feature_indices = np.random.choice(num_features, self.max_features, replace=False)
             X_sample = X_sample[:, feature_indices]
 
-            # Karar ağacını eğit
             tree = DecisionTree(max_depth=self.max_depth, min_samples_split=self.min_samples_split)
             tree.fit(X_sample, y_sample)
 
-            # Ağacı ve özellik indekslerini sakla
             self.trees.append((tree, feature_indices))
 
     def predict(self, X):
@@ -126,7 +121,6 @@ class RandomForest:
             tree.predict(X[:, feature_indices]) for tree, feature_indices in self.trees
         ])
 
-        # Çoğunluk oylaması
         majority_votes = np.array([
             np.bincount(tree_predictions[:, i]).argmax() for i in range(X.shape[0])
         ])
@@ -142,11 +136,9 @@ if __name__ == "__main__":
     ])
     y_train = np.array([0, 1, 0, 0, 1, 1, 1, 0, 0, 1])
 
-    # Random Forest Modeli
     forest = RandomForest(n_estimators=5, max_depth=3)
     forest.fit(X_train, y_train)
 
-    # Test Verisi
     X_test = np.array([[6, 8], [3, 4], [10, 11]])
     predictions = forest.predict(X_test)
 
