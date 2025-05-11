@@ -1,19 +1,20 @@
 import numpy as np
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import GridSearchCV
 import pandas as pd
+from xgboost import XGBClassifier
+from sklearn.model_selection import GridSearchCV
+from sklearn.ensemble import RandomForestClassifier
 
-def grid_search_random_forest(X_train, y_train, X_test):
+def train_model(X_train, y_train, X_test):
     print("X_train NaN değer sayısı:", np.isnan(X_train).sum().sum())
     print("X_train sonsuz değer sayısı:", np.isinf(X_train).sum().sum())
 
-    # Feature Selection için ilk RandomForest eğitimi
-    print("Özellik seçimi için ön model eğitiliyor...")
-    rf = RandomForestClassifier(n_estimators=100, random_state=42)
-    rf.fit(X_train, y_train)
+    # Feature Selection için XGBoost ile model eğitimi
+    print("Özellik seçimi için XGBoost modeli eğitiliyor...")
+    xgb = XGBClassifier(n_estimators=100, random_state=42)
+    xgb.fit(X_train, y_train)
 
     # Özelliklerin önemini alma
-    importances = rf.feature_importances_
+    importances = xgb.feature_importances_
     feature_names = X_train.columns
     
     # Önem sırasına göre sıralama

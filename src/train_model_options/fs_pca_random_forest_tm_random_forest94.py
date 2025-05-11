@@ -1,20 +1,20 @@
 import numpy as np
-import pandas as pd
-from xgboost import XGBClassifier
-from sklearn.model_selection import GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import GridSearchCV
+from sklearn.decomposition import PCA
+import pandas as pd
 
-def grid_search_random_forest(X_train, y_train, X_test):
+def train_model(X_train, y_train, X_test):
     print("X_train NaN değer sayısı:", np.isnan(X_train).sum().sum())
     print("X_train sonsuz değer sayısı:", np.isinf(X_train).sum().sum())
 
-    # Feature Selection için XGBoost ile model eğitimi
-    print("Özellik seçimi için XGBoost modeli eğitiliyor...")
-    xgb = XGBClassifier(n_estimators=100, random_state=42)
-    xgb.fit(X_train, y_train)
+    # Feature Selection için ilk RandomForest eğitimi
+    print("Özellik seçimi için ön model eğitiliyor...")
+    rf = RandomForestClassifier(n_estimators=100, random_state=42)
+    rf.fit(X_train, y_train)
 
     # Özelliklerin önemini alma
-    importances = xgb.feature_importances_
+    importances = rf.feature_importances_
     feature_names = X_train.columns
     
     # Önem sırasına göre sıralama
@@ -35,23 +35,27 @@ def grid_search_random_forest(X_train, y_train, X_test):
     X_train_selected = X_train.iloc[:, selected_features]
     X_test_selected = X_test.iloc[:, selected_features]
 
+    # PCA uygulama
+    print("\nPCA uygulanıyor...")
+    pca = PCA(n_components=0.95)  # %95'lik varyansı koruyacak kadar bileşen seçiyoruz
+    X_train_pca = pca.fit_transform(X_train_selected)
+    X_test_pca = pca.transform(X_test_selected)
+
     # GridSearchCV için parametreler
     param_grid = {
-        'n_estimators': [50],
-        'max_depth': [20],
-        'min_samples_split': [2],
-        'min_samples_leaf': [2],
+        'n_estimators': [50, 100],
+        'max_depth': [10, 20],
+        'min_samples_split': [2, 5],
+        'min_samples_leaf': [1, 2],
         'class_weight': ['balanced']
     }
 
     rf_model = RandomForestClassifier(random_state=42)
 
     grid_search = GridSearchCV(estimator=rf_model, param_grid=param_grid, cv=3, scoring='accuracy', n_jobs=-1)
-    grid_search.fit(X_train_selected, y_train)
+    grid_search.fit(X_train_pca, y_train)
 
-    # GridSearchCV sonuçlarını ekrana yazdırma
-    print("\nGridSearchCV Sonuçları:")
     print("En iyi parametreler:", grid_search.best_params_)
 
     # En iyi modeli ve test setini döndürüyoruz
-    return grid_search.best_estimator_, X_test_selected
+    return grid_search.best_estimator_, X_test_pca

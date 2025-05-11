@@ -7,7 +7,7 @@ from sklearn.feature_selection import VarianceThreshold
 import numpy as np
 import pandas as pd
 
-def grid_search_xgboost(X_train, y_train, X_test):
+def train_model(X_train, y_train, X_test):
     print("X_train NaN değer sayısı:", np.isnan(X_train).sum().sum())
     print("X_train sonsuz değer sayısı:", np.isinf(X_train).sum().sum())
 

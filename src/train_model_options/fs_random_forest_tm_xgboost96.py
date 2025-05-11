@@ -4,9 +4,9 @@ from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
 from sklearn.model_selection import GridSearchCV
 
-def grid_search_xgboost(X_train, y_train, X_test):
-    print("X_train NaN değer sayısı:", np.isnan(X_train).sum().sum())
-    print("X_train sonsuz değer sayısı:", np.isinf(X_train).sum().sum())
+def train_model(X_train, y_train, X_test):
+    print("X_train NaN değer sayısı:", np.isnan(X_train).sum().sum()) #X_train içindeki NaN (eksik) değerlerin toplam sayısını verir.
+    print("X_train sonsuz değer sayısı:", np.isinf(X_train).sum().sum()) #X_train içindeki sonsuz (inf) değerlerin toplam sayısını verir.
 
     # Feature Selection için RandomForest ile ilk model eğitimi
     print("\nÖzellik seçimi için RandomForest modeli eğitiliyor...")
@@ -14,24 +14,25 @@ def grid_search_xgboost(X_train, y_train, X_test):
     rf.fit(X_train, y_train)
 
     # Özelliklerin önemini alma
-    importances = rf.feature_importances_
-    feature_names = X_train.columns
+    importances = rf.feature_importances_ # Her özelliğin modele katkısını gösteren önem skorlarını verir.
+    feature_names = X_train.columns 
     
     # Önem sırasına göre sıralama
-    indices = np.argsort(importances)[::-1]
+    indices = np.argsort(importances)[::-1] #Özelliklerin önem sırasına göre indeksleri. Sıralama indekslerini döndürür. [::-1] ile büyükten küçüğe sıralanır.
 
     print("\nÖzelliklerin Önemi:")
     for i in indices:
         print(f"{feature_names[i]}: {importances[i]:.4f}")
 
     # Toplam önemin %95'ini kapsayan özellikleri seçiyoruz
-    cumulative_importance = np.cumsum(importances[indices])
-    num_features_to_keep = np.where(cumulative_importance >= 0.95)[0][0] + 1
-    selected_features = indices[:num_features_to_keep]
+    cumulative_importance = np.cumsum(importances[indices]) #np.cumsum(...): Kümülatif toplam hesaplar.
+    num_features_to_keep = np.where(cumulative_importance >= 0.95)[0][0] + 1 #np.where(...): İlk kez %95'ten büyük olan konumu bulur.
+    selected_features = indices[:num_features_to_keep] # Böylece, toplam bilgi içeriğinin %95’ini sağlayan en önemli ilk n özelliği seçiyoruz.
     
     print(f"\nSeçilen özellik sayısı: {num_features_to_keep}")
     
     # Seçilen özelliklerle X_train ve X_test'i güncelleme
+    #iloc[:, selected_features]: Belirlenen özellik indekslerine göre sadece bu sütunları alır.
     X_train_selected = X_train.iloc[:, selected_features]
     X_test_selected = X_test.iloc[:, selected_features]
 
