@@ -30,7 +30,7 @@ if processed_X_chunks:  # Liste boş değilse, verileri birleştir
 print(X.head())
 print("Veri setindeki sütunlar:", X.columns.tolist())
 
-# K-Fold Cross Validation
+# K-Fold Cross Validation Veriyi 5 parçaya böler. Her fold’da bir parça test, kalan 4 parça eğitim olarak kullanılır.
 kf = KFold(n_splits=5, shuffle=True, random_state=42)
 fold = 1
 accuracies = []
