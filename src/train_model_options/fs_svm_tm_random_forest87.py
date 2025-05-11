@@ -18,12 +18,12 @@ def train_model(X_train, y_train, X_test):
     print("NaN değerler dolduruldu.")
 
     # Düşük varyanslı özellikleri kaldır
-    selector = VarianceThreshold(threshold=0.01)
+    selector = VarianceThreshold(threshold=0.01) #Varyansı 0.01'den az olan sütunları çıkarır. Yani, çok az değişen (neredeyse sabit) sütunları filtreler çünkü genellikle model performansına katkısı olmaz.
     X_train = selector.fit_transform(X_train)
     X_test = selector.transform(X_test)
 
     # Özellikleri ölçeklendirme
-    scaler = StandardScaler()
+    scaler = StandardScaler() #StandardScaler: Her özelliği ortalaması 0 ve standart sapması 1 olacak şekilde dönüştürür. Özellikle SVM gibi mesafe tabanlı algoritmalar için önemlidir.
     X_train = scaler.fit_transform(X_train)
     X_test = scaler.transform(X_test)
 

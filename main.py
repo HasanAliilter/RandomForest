@@ -1,5 +1,5 @@
 from src.preprocess import preprocess_data_in_chunks, load_multiple_files_in_chunks
-from train_model_options.fs_pca_tm_random_forest94 import train_model
+from src.train_model_options.fs_pca_tm_random_forest94 import train_model
 from src.evaluate_model import evaluate_model
 from src.visualize import plot_feature_importance
 from sklearn.model_selection import KFold
