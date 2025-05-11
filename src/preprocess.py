@@ -19,6 +19,7 @@ def load_multiple_files_in_chunks(directory, chunk_size=50000):
         for chunk in pd.read_csv(file, chunksize=chunk_size, low_memory=False):
             yield chunk
 
+#Veri çerçevesindeki büyük veri tiplerini float64, int64 daha küçük ve daha verimli olanlara (float32, int32) çevirerek bellek kullanımını azaltır.
 def optimize_memory(df):
     """
     Bellek optimizasyonu için veri tiplerini küçültür.
@@ -29,30 +30,45 @@ def optimize_memory(df):
         df[col] = df[col].astype('int32')
     return df
 
-def clean_data(chunk):
+#Veri setindeki NaN (eksik) ve sonsuz (inf) değerleri temizlenir ve nan ve inf değerler konsola yazılır.
+def clean_data(chunk, fill_strategy='zero'):
     """
     NaN ve sonsuz değerleri temizler.
+    fill_strategy:
+        - 'zero': NaN ve inf değerlerini 0 ile doldurur
+        - 'mean': Sadece inf değerlerini 0 yapar, NaN'leri ortalama ile doldurur (SimpleImputer ile)
     """
     numeric_data = chunk.select_dtypes(include=[np.number])
     print("NaN değer sayısı (öncesi):", numeric_data.isna().sum().sum())
     print("Sonsuz değer sayısı (öncesi):", np.isinf(numeric_data).sum().sum())
 
-    # NaN ve sonsuz değerleri işleme
-    numeric_data.fillna(0, inplace=True)
+    # Sonsuz değerleri sıfırla
     numeric_data.replace([np.inf, -np.inf], 0, inplace=True)
+
+    if fill_strategy == 'zero':
+        numeric_data.fillna(0, inplace=True)
+    elif fill_strategy == 'mean':
+        imputer = SimpleImputer(strategy='mean')
+        numeric_data[:] = imputer.fit_transform(numeric_data)
+    else:
+        raise ValueError("Geçersiz fill_strategy. 'zero' veya 'mean' olmalı.")
 
     print("NaN değer sayısı (sonrası):", numeric_data.isna().sum().sum())
     print("Sonsuz değer sayısı (sonrası):", np.isinf(numeric_data).sum().sum())
     return numeric_data
 
-def preprocess_data_in_chunks(chunk):
+
+def preprocess_data_in_chunks(chunk, fill_strategy='zero'):
     """
     Veriyi parçalara ayırarak işler.
+    fill_strategy:
+        - 'zero': NaN ve inf değerlerini 0 ile doldurur
+        - 'mean': Sadece inf değerlerini 0 yapar, NaN'leri ortalama ile doldurur
     """
     if 'Label' not in chunk.columns:
         raise KeyError("Veri setinde 'Label' sütunu bulunamadı.")
     
-    # Sayısal veriyi seçerken, sayısal olmayanları ayıklıyoruz
+    # Sayısal veriyi seç
     numeric_data = chunk.select_dtypes(include=['float64', 'int64'])
     
     # Sayısal veri olup olmadığını kontrol et
@@ -60,40 +76,22 @@ def preprocess_data_in_chunks(chunk):
         print("Uyarı: Sayısal veri bulunamadı. Lütfen veri setinizi kontrol edin.")
         return None
     
-    # Bellek optimizasyonu
+    # Bellek optimizasyonu ve veri temizleme
     numeric_data = optimize_memory(numeric_data)
-
-    # NaN ve sonsuz değerleri temizleme
-    numeric_data = clean_data(numeric_data)
-
-    # NaN değerlerini doldurmak için SimpleImputer kullanıyoruz
-    imputer = SimpleImputer(strategy='mean')  # İsterseniz 'median' da kullanabilirsiniz
+    numeric_data = clean_data(numeric_data, fill_strategy=fill_strategy)
     
-    try:
-        # NaN'leri dolduruyoruz
-        numeric_data_imputed = imputer.fit_transform(numeric_data)
-    except ValueError as e:
-        print(f"Error during imputation: {e}")
-        return None  # Hata durumunda None döndürebiliriz
-
-    # Dönüştürülen numpy.ndarray'i tekrar DataFrame'e dönüştürme
-    numeric_data_imputed = pd.DataFrame(numeric_data_imputed, columns=numeric_data.columns)
-
-    # Etiket sütununu geri ekle
-    numeric_data_imputed['Label'] = chunk['Label']
-
-    # Label sütununu kategorik hale getirme
+    # Etiket sütununu ekle ve dönüştür
+    numeric_data['Label'] = chunk['Label']
     label_encoder = LabelEncoder()
-    numeric_data_imputed['Label'] = label_encoder.fit_transform(numeric_data_imputed['Label'])
+    numeric_data['Label'] = label_encoder.fit_transform(numeric_data['Label'])
 
-    # Sınıf dağılımını kontrol et ve SMOTE işlemi yap
-    if numeric_data_imputed['Label'].nunique() > 1:  # Eğer birden fazla sınıf varsa
+    # SMOTE ile sınıf dengesizliğini gider
+    if numeric_data['Label'].nunique() > 1:
         smote = SMOTE(random_state=42)
         X_resampled, y_resampled = smote.fit_resample(
-            numeric_data_imputed.drop('Label', axis=1), 
-            numeric_data_imputed['Label']
+            numeric_data.drop('Label', axis=1), 
+            numeric_data['Label']
         )
-        # Hem X hem de y döndürüyoruz
         return X_resampled, y_resampled
     else:
         print("Sadece bir sınıf bulundu. SMOTE işlemi yapılamaz.")
