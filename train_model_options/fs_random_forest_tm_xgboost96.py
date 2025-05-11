@@ -1,14 +1,15 @@
 import numpy as np
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import GridSearchCV
 import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
+from xgboost import XGBClassifier
+from sklearn.model_selection import GridSearchCV
 
-def grid_search_random_forest(X_train, y_train, X_test):
+def train_model(X_train, y_train, X_test):
     print("X_train NaN değer sayısı:", np.isnan(X_train).sum().sum())
     print("X_train sonsuz değer sayısı:", np.isinf(X_train).sum().sum())
 
-    # Feature Selection için ilk RandomForest eğitimi
-    print("Özellik seçimi için ön model eğitiliyor...")
+    # Feature Selection için RandomForest ile ilk model eğitimi
+    print("\nÖzellik seçimi için RandomForest modeli eğitiliyor...")
     rf = RandomForestClassifier(n_estimators=100, random_state=42)
     rf.fit(X_train, y_train)
 
@@ -36,16 +37,18 @@ def grid_search_random_forest(X_train, y_train, X_test):
 
     # GridSearchCV için parametreler
     param_grid = {
-        'n_estimators': [50],
-        'max_depth': [20],
-        'min_samples_split': [2],
-        'min_samples_leaf': [2],
-        'class_weight': ['balanced']
+        'n_estimators': [50],        # Ağaç sayısı
+        'max_depth': [20],           # Maksimum derinlik
+        'learning_rate': [0.01],     # Öğrenme oranı
+        'gamma': [1],                # Bölünme kontrolü
+        'subsample': [0.8]           # Örnekleme oranı
     }
 
-    rf_model = RandomForestClassifier(random_state=42)
+    xgb_model = XGBClassifier(random_state=42, eval_metric='logloss', tree_method='hist', device="cuda")
 
-    grid_search = GridSearchCV(estimator=rf_model, param_grid=param_grid, cv=3, scoring='accuracy', n_jobs=-1)
+    # GridSearchCV başlatma
+    print("\nGridSearchCV ile XGBoost modeli eğitiliyor...")
+    grid_search = GridSearchCV(estimator=xgb_model, param_grid=param_grid, cv=3, scoring='accuracy', n_jobs=-1)
     grid_search.fit(X_train_selected, y_train)
 
     # GridSearchCV sonuçlarını ekrana yazdırma

@@ -1,20 +1,20 @@
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
 from sklearn.model_selection import GridSearchCV
+from sklearn.ensemble import RandomForestClassifier
 
-def grid_search_xgboost(X_train, y_train, X_test):
+def train_model(X_train, y_train, X_test):
     print("X_train NaN değer sayısı:", np.isnan(X_train).sum().sum())
     print("X_train sonsuz değer sayısı:", np.isinf(X_train).sum().sum())
 
-    # Feature Selection için RandomForest ile ilk model eğitimi
-    print("\nÖzellik seçimi için RandomForest modeli eğitiliyor...")
-    rf = RandomForestClassifier(n_estimators=100, random_state=42)
-    rf.fit(X_train, y_train)
+    # Feature Selection için XGBoost ile model eğitimi
+    print("Özellik seçimi için XGBoost modeli eğitiliyor...")
+    xgb = XGBClassifier(n_estimators=100, random_state=42)
+    xgb.fit(X_train, y_train)
 
     # Özelliklerin önemini alma
-    importances = rf.feature_importances_
+    importances = xgb.feature_importances_
     feature_names = X_train.columns
     
     # Önem sırasına göre sıralama
@@ -37,18 +37,16 @@ def grid_search_xgboost(X_train, y_train, X_test):
 
     # GridSearchCV için parametreler
     param_grid = {
-        'n_estimators': [50],        # Ağaç sayısı
-        'max_depth': [20],           # Maksimum derinlik
-        'learning_rate': [0.01],     # Öğrenme oranı
-        'gamma': [1],                # Bölünme kontrolü
-        'subsample': [0.8]           # Örnekleme oranı
+        'n_estimators': [50],
+        'max_depth': [20],
+        'min_samples_split': [2],
+        'min_samples_leaf': [2],
+        'class_weight': ['balanced']
     }
 
-    xgb_model = XGBClassifier(random_state=42, eval_metric='logloss', tree_method='hist', device="cuda")
+    rf_model = RandomForestClassifier(random_state=42)
 
-    # GridSearchCV başlatma
-    print("\nGridSearchCV ile XGBoost modeli eğitiliyor...")
-    grid_search = GridSearchCV(estimator=xgb_model, param_grid=param_grid, cv=3, scoring='accuracy', n_jobs=-1)
+    grid_search = GridSearchCV(estimator=rf_model, param_grid=param_grid, cv=3, scoring='accuracy', n_jobs=-1)
     grid_search.fit(X_train_selected, y_train)
 
     # GridSearchCV sonuçlarını ekrana yazdırma

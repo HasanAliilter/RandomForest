@@ -1,13 +1,13 @@
-from xgboost import XGBClassifier
 from sklearn.svm import LinearSVC
 from sklearn.model_selection import GridSearchCV
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler
 from sklearn.feature_selection import VarianceThreshold
 import numpy as np
 import pandas as pd
 
-def grid_search_xgboost(X_train, y_train, X_test):
+def train_model(X_train, y_train, X_test):
     print("X_train NaN değer sayısı:", np.isnan(X_train).sum().sum())
     print("X_train sonsuz değer sayısı:", np.isinf(X_train).sum().sum())
 
@@ -45,19 +45,17 @@ def grid_search_xgboost(X_train, y_train, X_test):
     X_train_selected = X_train[:, selected_features]
     X_test_selected = X_test[:, selected_features]
 
-    # GridSearchCV için parametreler (XGBoost için)
+    # GridSearchCV için parametreler
     param_grid = {
-        'n_estimators': [50],        # Ağaç sayısı
-        'max_depth': [20],           # Maksimum derinlik
-        'learning_rate': [0.01],     # Öğrenme oranı
-        'gamma': [1],                # Bölünme kontrolü
-        'subsample': [0.8]           # Örnekleme oranı
+        'n_estimators': [50],
+        'max_depth': [20],
+        'min_samples_split': [2],
+        'min_samples_leaf': [2],
+        'class_weight': ['balanced']
     }
 
-    # XGBoost modeli tanımlama
-    xgb_model = XGBClassifier(objective='binary:logistic', random_state=42, use_label_encoder=False, eval_metric='logloss')
-
-    grid_search = GridSearchCV(estimator=xgb_model, param_grid=param_grid, cv=3, scoring='accuracy', n_jobs=-1)
+    rf_model = RandomForestClassifier(random_state=42)
+    grid_search = GridSearchCV(estimator=rf_model, param_grid=param_grid, cv=3, scoring='accuracy', n_jobs=-1)
     grid_search.fit(X_train_selected, y_train)
 
     print("\nGridSearchCV Sonuçları:")

@@ -5,7 +5,7 @@ from xgboost import XGBClassifier
 from sklearn.model_selection import GridSearchCV
 from sklearn.impute import SimpleImputer
 
-def grid_search_xgboost(X_train, y_train, X_test):
+def train_model(X_train, y_train, X_test):
     # Eksik değerleri doldur
     imputer = SimpleImputer(strategy='mean')
     X_train = pd.DataFrame(imputer.fit_transform(X_train), columns=X_train.columns)

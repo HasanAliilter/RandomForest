@@ -1,5 +1,5 @@
 from src.preprocess import preprocess_data_in_chunks, load_multiple_files_in_chunks
-from src.train_model import grid_search_random_forest
+from train_model_options.fs_pca_tm_random_forest94 import train_model
 from src.evaluate_model import evaluate_model
 from src.visualize import plot_feature_importance
 from sklearn.model_selection import KFold
@@ -42,7 +42,7 @@ for train_index, test_index in kf.split(X):
     y_train, y_test = y.iloc[train_index], y.iloc[test_index]
 
     # Model eğitimi (GridSearchCV ile hiperparametre optimizasyonu)
-    model, X_test_pca = grid_search_random_forest(X_train, y_train, X_test)  # Burada GridSearch kullanıyoruz
+    model, X_test_pca = train_model(X_train, y_train, X_test)  # Burada GridSearch kullanıyoruz
 
     # Model değerlendirmesi
     accuracy, report = evaluate_model(model, X_test_pca, y_test)
