@@ -5,7 +5,7 @@ from sklearn.impute import SimpleImputer
 from imblearn.over_sampling import SMOTE
 from sklearn.preprocessing import LabelEncoder
 
-def load_multiple_files_in_chunks(directory, chunk_size=50000):
+def load_multiple_files_in_chunks(directory, chunk_size=100000):
     """
     Belirtilen dizindeki tüm CSV dosyalarını parçalara ayırarak yükler.
     """
@@ -19,7 +19,7 @@ def load_multiple_files_in_chunks(directory, chunk_size=50000):
         for chunk in pd.read_csv(file, chunksize=chunk_size, low_memory=False):
             yield chunk # yield kullanıldığı için generator döner — bellekte tek seferde sadece bir parça tutulur.
             
-def optimize_memory(df): #64-bitlik değişkenleri(float ve integer) 32-bit’e çevirerek %50’ye varan hafıza tasarrufu sağlar.
+def optimize_memory(df): #bu fonksiyonda 64-bitlik (float ve integer) değişkenleri  32-bit’e çevirerek bellek optimizasyonu sağlıyoruz.
     """
     Bellek optimizasyonu için veri tiplerini küçültür.
     """
@@ -31,7 +31,7 @@ def optimize_memory(df): #64-bitlik değişkenleri(float ve integer) 32-bit’e 
 
 def clean_data(chunk):
     """
-    NaN ve sonsuz değerleri temizler.
+    bu fonksiyonda  NaN ve sonsuz değerleri temizler bu değerleri sıfır ile değiştirerek model eğitiminde kullanılabilir hale getiriyoruz.
     """
     numeric_data = chunk.select_dtypes(include=[np.number])
     print("NaN değer sayısı (öncesi):", numeric_data.isna().sum().sum())
@@ -86,14 +86,14 @@ def preprocess_data_in_chunks(chunk):
     label_encoder = LabelEncoder() 
     numeric_data_imputed['Label'] = label_encoder.fit_transform(numeric_data_imputed['Label']) #Sınıflar 'Benign', 'Malware' gibi metin içeriyorsa, bunlar sayıya çevrilir (örn. 0, 1).
 
-    # Sınıf dağılımını kontrol et ve SMOTE işlemi yap
+    # Ardından Sınıf dağılımını kontrol ediyoruz  ve SMOTE işlemi veri setini dengeliyoruz.
     if numeric_data_imputed['Label'].nunique() > 1:  #Eğer veri setinde dengesizlik varsa (örneğin 95% Benign, 5% Attack gibi), SMOTE azınlık sınıfın kopyalarını oluşturarak veri setini dengeler.
         smote = SMOTE(random_state=42)
         X_resampled, y_resampled = smote.fit_resample(
             numeric_data_imputed.drop('Label', axis=1), 
             numeric_data_imputed['Label']
         )
-        # Hem X hem de y döndürüyoruz
+        # Sonrasında özellik ve etiketleri dönüyoruz.
         return X_resampled, y_resampled
     else:
         print("Sadece bir sınıf bulundu. SMOTE işlemi yapılamaz.") #SMOTE yalnızca 2 veya daha fazla sınıf varsa çalışır.

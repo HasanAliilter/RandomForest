@@ -1,21 +1,25 @@
 from src.preprocess import preprocess_data_in_chunks, load_multiple_files_in_chunks
-from src.train_model_options.fs_pca_tm_random_forest94 import train_model
+from src.train_model_options.fs_random_forest_tm_random_forest96 import train_model
 from src.evaluate_model import evaluate_model
 from src.visualize import plot_feature_importance
 from sklearn.model_selection import KFold
 import numpy as np
 import pandas as pd
+#Main dosyamızda projemizin ana işlevlerini yönetiyoruz
+#Veri boyutumuz çok büyük olduğu için hepsini tek tek okuyup işlerken belleği zorlamamak için parça parça (chunk halinde) yüklüyoruz.
 
 data_directory = "Data"
 chunk_size = 100000  # Daha küçük chunk boyutu
-
-# Veriyi parçalara ayırarak yükleme ve işleme
+# Veriyi parçalara ayırarak yükleme ve işleme load_multiple_files_in_chunks fonksiyonu ile yapıyoruz.
 data_chunks = load_multiple_files_in_chunks(data_directory, chunk_size)
 
 processed_X_chunks = []
 processed_y_chunks = []
 
+
 for chunk in data_chunks:
+    #bu chunklarımızı preprocess sürecinden geçirmek için preprocess_data_in_chunks fonksiyonunu kullanıyoruz ve ardından özelliklerimizi
+    # ve etiketlerimizi model eğitiminde kullanmak için iki ayrı listeye atıyoruz
     result = preprocess_data_in_chunks(chunk)
     if result is not None:
         X_resampled, y_resampled = result  # Hem X hem de y'yi alıyoruz
@@ -33,20 +37,20 @@ print("Veri setindeki sütunlar:", X.columns.tolist()) #kontrol amaçlı bir pri
 # K-Fold Cross Validation
 kf = KFold(n_splits=5, shuffle=True, random_state=42)
 fold = 1
-accuracies = [] #Her fold’un doğruluk değerini saklar.
+accuracies = [] #Her fold'un doğruluk değerini saklar.
 classification_reports = [] #Her fold için sınıflandırma metriklerini (precision, recall, f1-score) saklar.
 
-for train_index, test_index in kf.split(X): #kf.split(X): Veriyi eğitim ve test indekslerine böler. train_index ve test_index: Fold’a özel indeks dizileri döner.
+for train_index, test_index in kf.split(X): #kf.split(X): Veriyi eğitim ve test indekslerine böler. train_index ve test_index: Fold'a özel indeks dizileri döner.
     print(f"Fold {fold}")
-    #Eğitim (X_train, y_train) ve test (X_test, y_test) verileri iloc ile indekslere göre seçilir. X ve y, pandas DataFrame veya Series’tir.
+    #Eğitim (X_train, y_train) ve test (X_test, y_test) verileri iloc ile indekslere göre seçilir. X ve y, pandas DataFrame veya Series'tir.
     X_train, X_test = X.iloc[train_index], X.iloc[test_index] 
     y_train, y_test = y.iloc[train_index], y.iloc[test_index]
 
-    # Model eğitimi (GridSearchCV ile hiperparametre optimizasyonu)
-    model, X_test_pca = train_model(X_train, y_train, X_test)  # Burada GridSearch kullanıyoruz
+    # Model eğitimi (RandomizedSearchCV ile hiperparametre optimizasyonu)
+    model, X_test_selected = train_model(X_train, y_train, X_test)  # RandomizedSearchCV kullanıyoruz
 
     # Model değerlendirmesi
-    accuracy, report = evaluate_model(model, X_test_pca, y_test)
+    accuracy, report = evaluate_model(model, X_test_selected, y_test)
     accuracies.append(accuracy)
     classification_reports.append(report)
 
