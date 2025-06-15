@@ -49,7 +49,10 @@ def preprocess_data_in_chunks(chunk):
     """
     Veriyi parçalara ayırarak işler.
     """
-    if 'Label' not in chunk.columns: #Veri kümesinde hedef sütun (Label) yoksa hata fırlatılır.
+    # Sütun isimlerindeki boşlukları temizle
+    chunk.columns = chunk.columns.str.strip()
+    
+    if 'Label' not in chunk.columns:
         raise KeyError("Veri setinde 'Label' sütunu bulunamadı.")
     
     # Sayısal veriyi seçerken, sayısal olmayanları ayıklıyoruz

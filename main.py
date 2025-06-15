@@ -1,5 +1,5 @@
 from src.preprocess import preprocess_data_in_chunks, load_multiple_files_in_chunks
-from src.train_model_options.fs_random_forest_tm_random_forest96 import train_model
+from src.train_model_options.fs_pca_tm_random_forest94 import train_model
 from src.evaluate_model import evaluate_model
 from src.visualize import plot_feature_importance
 from sklearn.model_selection import KFold
@@ -12,6 +12,10 @@ data_directory = "Data"
 chunk_size = 100000  # Daha küçük chunk boyutu
 # Veriyi parçalara ayırarak yükleme ve işleme load_multiple_files_in_chunks fonksiyonu ile yapıyoruz.
 data_chunks = load_multiple_files_in_chunks(data_directory, chunk_size)
+
+# İlk chunk'ın sütunlarını kontrol et
+if data_chunks:
+    print("Veri seti sütunları:", next(iter(data_chunks)).columns.tolist())
 
 processed_X_chunks = []
 processed_y_chunks = []
