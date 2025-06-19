@@ -18,12 +18,12 @@ def train_model(X_train, y_train, X_test):
     print("NaN değerler dolduruldu.")
 
     # Düşük varyanslı özellikleri kaldır
-    selector = VarianceThreshold(threshold=0.01) #Varyansı 0.01'den az olan sütunları çıkarır. Yani, çok az değişen (neredeyse sabit) sütunları filtreler çünkü genellikle model performansına katkısı olmaz.
+    selector = VarianceThreshold(threshold=0.01)
     X_train = selector.fit_transform(X_train)
     X_test = selector.transform(X_test)
 
     # Özellikleri ölçeklendirme
-    scaler = StandardScaler() #StandardScaler: Her özelliği ortalaması 0 ve standart sapması 1 olacak şekilde dönüştürür. Özellikle SVM gibi mesafe tabanlı algoritmalar için önemlidir.
+    scaler = StandardScaler()
     X_train = scaler.fit_transform(X_train)
     X_test = scaler.transform(X_test)
 
@@ -57,8 +57,5 @@ def train_model(X_train, y_train, X_test):
     rf_model = RandomForestClassifier(random_state=42)
     grid_search = GridSearchCV(estimator=rf_model, param_grid=param_grid, cv=3, scoring='accuracy', n_jobs=-1)
     grid_search.fit(X_train_selected, y_train)
-
-    print("\nGridSearchCV Sonuçları:")
-    print("En iyi parametreler:", grid_search.best_params_)
 
     return grid_search.best_estimator_, X_test_selected

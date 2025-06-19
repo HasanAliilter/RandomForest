@@ -1,0 +1,67 @@
+Ortalama Accuracy: 0.9491786084318601
+
+Fold 1 Classification Report:
+              precision    recall  f1-score   support
+
+           0       1.00      0.99      0.99    142695
+           1       0.91      0.96      0.93    143010
+           2       0.95      0.86      0.91     86554
+           3       0.94      0.98      0.96     39993
+
+    accuracy                           0.95    412252
+   macro avg       0.95      0.95      0.95    412252
+weighted avg       0.95      0.95      0.95    412252
+
+
+Fold 2 Classification Report:
+              precision    recall  f1-score   support
+
+           0       0.99      0.99      0.99    142875
+           1       0.91      0.96      0.93    142569
+           2       0.95      0.86      0.91     87034
+           3       0.94      0.98      0.96     39774
+
+    accuracy                           0.95    412252
+   macro avg       0.95      0.95      0.95    412252
+weighted avg       0.95      0.95      0.95    412252
+
+
+Fold 3 Classification Report:
+              precision    recall  f1-score   support
+
+           0       1.00      0.99      0.99    142659
+           1       0.91      0.96      0.93    143004
+           2       0.95      0.86      0.91     86879
+           3       0.94      0.98      0.96     39710
+
+    accuracy                           0.95    412252
+   macro avg       0.95      0.95      0.95    412252
+weighted avg       0.95      0.95      0.95    412252
+
+
+Fold 4 Classification Report:
+              precision    recall  f1-score   support
+
+           0       0.99      0.99      0.99    142802
+           1       0.91      0.95      0.93    142739
+           2       0.95      0.86      0.91     86759
+           3       0.94      0.98      0.96     39951
+
+    accuracy                           0.95    412251
+   macro avg       0.95      0.95      0.95    412251
+weighted avg       0.95      0.95      0.95    412251
+
+
+Fold 5 Classification Report:
+              precision    recall  f1-score   support
+
+           0       1.00      0.99      0.99    143026
+           1       0.91      0.96      0.93    142735
+           2       0.95      0.86      0.91     86846
+           3       0.94      0.98      0.96     39644
+
+    accuracy                           0.95    412251
+   macro avg       0.95      0.95      0.95    412251
+weighted avg       0.95      0.95      0.95    412251
+
+

@@ -10,11 +10,8 @@ from sklearn.impute import SimpleImputer
 def train_model(X_train, y_train, X_test):
     print("X_train NaN değer sayısı:", np.isnan(X_train).sum().sum())
     print("X_train sonsuz değer sayısı:", np.isinf(X_train).sum().sum())
-    
-    print("y_train tipi:", type(y_train))
-    
+        
     if isinstance(y_train, pd.Series):
-        print("y_train NaN değer sayısı:", y_train.isna().sum())
         y_train = y_train.dropna() 
         X_train = X_train.loc[y_train.index] 
     else:
@@ -55,9 +52,6 @@ def train_model(X_train, y_train, X_test):
 
     # GridSearchCV ile model eğitimi
     grid_search.fit(X_train_resampled, y_train_resampled)
-
-    # En iyi model parametreleri
-    print("En iyi parametreler:", grid_search.best_params_)
 
     # En iyi model döndürülüyor
     return grid_search.best_estimator_, X_test_pca

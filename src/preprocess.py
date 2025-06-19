@@ -31,19 +31,13 @@ def optimize_memory(df):
 
 def clean_data(chunk):
     """
-    NaN ve sonsuz değerleri temizler.
+    Sonsuz (inf) değerleri temizler, NaN'leri dokunmadan bırakır.
     """
     numeric_data = chunk.select_dtypes(include=[np.number])
-    print("NaN değer sayısı (öncesi):", numeric_data.isna().sum().sum())
-    print("Sonsuz değer sayısı (öncesi):", np.isinf(numeric_data).sum().sum())
-
-    # NaN ve sonsuz değerleri işleme
-    numeric_data.fillna(0, inplace=True)
-    numeric_data.replace([np.inf, -np.inf], 0, inplace=True)
-
-    print("NaN değer sayısı (sonrası):", numeric_data.isna().sum().sum())
-    print("Sonsuz değer sayısı (sonrası):", np.isinf(numeric_data).sum().sum())
+    # Sadece sonsuz değerleri 0 ile değiştiriyoruz
+    numeric_data.replace([np.inf, -np.inf], np.nan, inplace=True)
     return numeric_data
+
 
 def preprocess_data_in_chunks(chunk):
     """
@@ -57,7 +51,6 @@ def preprocess_data_in_chunks(chunk):
     
     # Sayısal veri olup olmadığını kontrol et
     if numeric_data.empty:
-        print("Uyarı: Sayısal veri bulunamadı. Lütfen veri setinizi kontrol edin.")
         return None
     
     # Bellek optimizasyonu
@@ -73,7 +66,6 @@ def preprocess_data_in_chunks(chunk):
         # NaN'leri dolduruyoruz
         numeric_data_imputed = imputer.fit_transform(numeric_data)
     except ValueError as e:
-        print(f"Error during imputation: {e}")
         return None  # Hata durumunda None döndürebiliriz
 
     # Dönüştürülen numpy.ndarray'i tekrar DataFrame'e dönüştürme
@@ -96,5 +88,4 @@ def preprocess_data_in_chunks(chunk):
         # Hem X hem de y döndürüyoruz
         return X_resampled, y_resampled
     else:
-        print("Sadece bir sınıf bulundu. SMOTE işlemi yapılamaz.")
         return None

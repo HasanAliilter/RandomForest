@@ -16,7 +16,10 @@ def train_model(X_train, y_train, X_test):
 
     # Feature Selection için Logistic Regression ile ilk model eğitimi
     print("\nÖzellik seçimi için Logistic Regression modeli eğitiliyor...")
-    lr = LogisticRegression(penalty='l1', solver='liblinear', max_iter=1000, random_state=42)
+    lr = LogisticRegression(
+    penalty='l2', solver='saga', max_iter=1000,
+    multi_class='multinomial', random_state=42
+)
     lr.fit(X_train, y_train)
 
     # Katsayıların mutlak değerini alarak önem sırasına göre sıralama
@@ -25,10 +28,6 @@ def train_model(X_train, y_train, X_test):
     
     # Önem sırasına göre sıralama
     indices = np.argsort(importances)[::-1]
-
-    print("\nÖzelliklerin Önemi:")
-    for i in indices:
-        print(f"{feature_names[i]}: {importances[i]:.4f}")
 
     # Toplam önemin %95'ini kapsayan özellikleri seçiyoruz
     cumulative_importance = np.cumsum(importances[indices])
@@ -51,16 +50,12 @@ def train_model(X_train, y_train, X_test):
         'subsample': [0.8]           # Örnekleme oranı
     }
 
-    xgb_model = XGBClassifier(random_state=42, eval_metric='logloss', tree_method='hist', device="cuda")
+    xgb_model = XGBClassifier(random_state=42, eval_metric='logloss', tree_method='hist')
 
     # GridSearchCV başlatma
     print("\nGridSearchCV ile XGBoost modeli eğitiliyor...")
     grid_search = GridSearchCV(estimator=xgb_model, param_grid=param_grid, cv=3, scoring='accuracy', n_jobs=-1)
     grid_search.fit(X_train_selected, y_train)
-
-    # GridSearchCV sonuçlarını ekrana yazdırma
-    print("\nGridSearchCV Sonuçları:")
-    print("En iyi parametreler:", grid_search.best_params_)
 
     # En iyi modeli ve test setini döndürüyoruz
     return grid_search.best_estimator_, X_test_selected

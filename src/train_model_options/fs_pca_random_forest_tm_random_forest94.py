@@ -20,10 +20,6 @@ def train_model(X_train, y_train, X_test):
     # Önem sırasına göre sıralama
     indices = np.argsort(importances)[::-1]
 
-    print("\nÖzelliklerin Önemi:")
-    for i in indices:
-        print(f"{feature_names[i]}: {importances[i]:.4f}")
-
     # Toplam önemin %95'ini kapsayan özellikleri seçiyoruz
     cumulative_importance = np.cumsum(importances[indices])
     num_features_to_keep = np.where(cumulative_importance >= 0.95)[0][0] + 1
@@ -54,8 +50,6 @@ def train_model(X_train, y_train, X_test):
 
     grid_search = GridSearchCV(estimator=rf_model, param_grid=param_grid, cv=3, scoring='accuracy', n_jobs=-1)
     grid_search.fit(X_train_pca, y_train)
-
-    print("En iyi parametreler:", grid_search.best_params_)
 
     # En iyi modeli ve test setini döndürüyoruz
     return grid_search.best_estimator_, X_test_pca
