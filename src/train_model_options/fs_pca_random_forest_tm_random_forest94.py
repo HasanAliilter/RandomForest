@@ -8,32 +8,27 @@ def train_model(X_train, y_train, X_test):
     print("X_train NaN değer sayısı:", np.isnan(X_train).sum().sum())
     print("X_train sonsuz değer sayısı:", np.isinf(X_train).sum().sum())
 
-    # Feature Selection için ilk RandomForest eğitimi
     print("Özellik seçimi için ön model eğitiliyor...")
     rf = RandomForestClassifier(n_estimators=100, random_state=42)
     rf.fit(X_train, y_train)
 
-    # Özelliklerin önemini alma
     importances = rf.feature_importances_
     feature_names = X_train.columns
     
-    # Önem sırasına göre sıralama
     indices = np.argsort(importances)[::-1]
 
-    # Toplam önemin %95'ini kapsayan özellikleri seçiyoruz
     cumulative_importance = np.cumsum(importances[indices])
     num_features_to_keep = np.where(cumulative_importance >= 0.95)[0][0] + 1
     selected_features = indices[:num_features_to_keep]
     
     print(f"\nSeçilen özellik sayısı: {num_features_to_keep}")
     
-    # Seçilen özelliklerle X_train ve X_test'i güncelleme
     X_train_selected = X_train.iloc[:, selected_features]
     X_test_selected = X_test.iloc[:, selected_features]
 
     # PCA uygulama
     print("\nPCA uygulanıyor...")
-    pca = PCA(n_components=0.95)  # %95'lik varyansı koruyacak kadar bileşen seçiyoruz
+    pca = PCA(n_components=0.95)
     X_train_pca = pca.fit_transform(X_train_selected)
     X_test_pca = pca.transform(X_test_selected)
 

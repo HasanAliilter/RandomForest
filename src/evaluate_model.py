@@ -12,9 +12,9 @@ def evaluate_model(model, X_test, y_test):
     print(f"y_pred örnek değerler: {y_pred[:5]}")
     
     # NaN veya sonsuz değerleri kontrol et
-    if isinstance(y_test, pd.Series):  # Pandas Series ise
+    if isinstance(y_test, pd.Series):
         y_test = y_test.values
-    if isinstance(y_pred, pd.Series):  # Pandas Series ise
+    if isinstance(y_pred, pd.Series):
         y_pred = y_pred.values
 
     # Etiketlerin hepsini string (metin) türüne dönüştür

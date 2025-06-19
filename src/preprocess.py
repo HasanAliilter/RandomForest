@@ -46,10 +46,8 @@ def preprocess_data_in_chunks(chunk):
     if 'Label' not in chunk.columns:
         raise KeyError("Veri setinde 'Label' sütunu bulunamadı.")
     
-    # Sayısal veriyi seçerken, sayısal olmayanları ayıklıyoruz
     numeric_data = chunk.select_dtypes(include=['float64', 'int64'])
     
-    # Sayısal veri olup olmadığını kontrol et
     if numeric_data.empty:
         return None
     
@@ -59,33 +57,26 @@ def preprocess_data_in_chunks(chunk):
     # NaN ve sonsuz değerleri temizleme
     numeric_data = clean_data(numeric_data)
 
-    # NaN değerlerini doldurmak için SimpleImputer kullanıyoruz
     imputer = SimpleImputer(strategy='mean')  # İsterseniz 'median' da kullanabilirsiniz
     
     try:
-        # NaN'leri dolduruyoruz
         numeric_data_imputed = imputer.fit_transform(numeric_data)
     except ValueError as e:
-        return None  # Hata durumunda None döndürebiliriz
+        return None
 
-    # Dönüştürülen numpy.ndarray'i tekrar DataFrame'e dönüştürme
     numeric_data_imputed = pd.DataFrame(numeric_data_imputed, columns=numeric_data.columns)
 
-    # Etiket sütununu geri ekle
     numeric_data_imputed['Label'] = chunk['Label']
 
-    # Label sütununu kategorik hale getirme
     label_encoder = LabelEncoder()
     numeric_data_imputed['Label'] = label_encoder.fit_transform(numeric_data_imputed['Label'])
 
-    # Sınıf dağılımını kontrol et ve SMOTE işlemi yap
-    if numeric_data_imputed['Label'].nunique() > 1:  # Eğer birden fazla sınıf varsa
+    if numeric_data_imputed['Label'].nunique() > 1:
         smote = SMOTE(random_state=42)
         X_resampled, y_resampled = smote.fit_resample(
             numeric_data_imputed.drop('Label', axis=1), 
             numeric_data_imputed['Label']
         )
-        # Hem X hem de y döndürüyoruz
         return X_resampled, y_resampled
     else:
         return None

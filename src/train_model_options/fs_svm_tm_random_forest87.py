@@ -11,18 +11,15 @@ def train_model(X_train, y_train, X_test):
     print("X_train NaN değer sayısı:", np.isnan(X_train).sum().sum())
     print("X_train sonsuz değer sayısı:", np.isinf(X_train).sum().sum())
 
-    # NaN değerleri median ile doldur
     imputer = SimpleImputer(strategy="median")
     X_train = pd.DataFrame(imputer.fit_transform(X_train), columns=X_train.columns)
     X_test = pd.DataFrame(imputer.transform(X_test), columns=X_test.columns)
     print("NaN değerler dolduruldu.")
 
-    # Düşük varyanslı özellikleri kaldır
     selector = VarianceThreshold(threshold=0.01)
     X_train = selector.fit_transform(X_train)
     X_test = selector.transform(X_test)
 
-    # Özellikleri ölçeklendirme
     scaler = StandardScaler()
     X_train = scaler.fit_transform(X_train)
     X_test = scaler.transform(X_test)
@@ -35,7 +32,6 @@ def train_model(X_train, y_train, X_test):
     importances = np.abs(svc.coef_).flatten()
     indices = np.argsort(importances)[::-1]
 
-    # %95 önem kapsayan özellikleri seç
     cumulative_importance = np.cumsum(importances[indices])
     num_features_to_keep = np.where(cumulative_importance >= 0.95)[0][0] + 1
     selected_features = indices[:num_features_to_keep]

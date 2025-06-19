@@ -6,7 +6,6 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.impute import SimpleImputer
 
 def train_model(X_train, y_train, X_test):
-    # Eksik değerleri doldur
     imputer = SimpleImputer(strategy='mean')
     X_train = pd.DataFrame(imputer.fit_transform(X_train), columns=X_train.columns)
     X_test = pd.DataFrame(imputer.transform(X_test), columns=X_test.columns)
@@ -22,14 +21,11 @@ def train_model(X_train, y_train, X_test):
 )
     lr.fit(X_train, y_train)
 
-    # Katsayıların mutlak değerini alarak önem sırasına göre sıralama
     importances = np.abs(lr.coef_[0])
     feature_names = X_train.columns
     
-    # Önem sırasına göre sıralama
     indices = np.argsort(importances)[::-1]
 
-    # Toplam önemin %95'ini kapsayan özellikleri seçiyoruz
     cumulative_importance = np.cumsum(importances[indices])
     total_importance = cumulative_importance[-1]
     num_features_to_keep = np.where(cumulative_importance >= 0.95 * total_importance)[0][0] + 1
